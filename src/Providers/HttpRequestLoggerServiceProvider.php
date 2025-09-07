@@ -31,7 +31,7 @@ class HttpRequestLoggerServiceProvider extends ServiceProvider
 
 
         $this->publishes([
-            __DIR__ . '../../database/migrations/create_http_request_logs_table.php.stub'
+            __DIR__ . '/../../database/migrations/create_http_request_logs_table.php.stub'
             => database_path('migrations/'.date('Y_m_d_His').'_create_http_request_logs_table.php'),
         ], 'migrations');
     }
