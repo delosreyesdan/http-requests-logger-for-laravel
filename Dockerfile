@@ -1,4 +1,4 @@
-FROM php:8.3-cli-alpine
+FROM php:8.2-cli-alpine
 
 # Install dependencies: build tools + sqlite + redis extension
 RUN apk add --no-cache \
@@ -24,11 +24,10 @@ WORKDIR /app
 
 # Copy composer first for caching
 COPY composer.json composer.lock ./
+#
+#RUN composer install --no-scripts --no-progress --no-interaction --prefer-dist --ignore-platform-reqs
 
-# Create SQLite folder
-RUN mkdir -p /app/database && touch /app/database/database.sqlite
-
-RUN composer install --no-scripts --no-progress --no-interaction --prefer-dist --ignore-platform-reqs
+RUN composer install
 
 # Copy package source
 COPY . .
