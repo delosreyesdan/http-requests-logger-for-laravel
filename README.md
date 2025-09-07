@@ -1,10 +1,8 @@
 # 📦 Http Requests Logger for Laravel
 
-[//]: # ([![Latest Version on Packagist]&#40;https://img.shields.io/packagist/v/delosreyesdan/http-requests-logger-for-laravel.svg?style=flat-square&#41;]&#40;https://packagist.org/packages/delosreyesdan/http-requests-logger-for-laravel&#41;  )
+#  🚧  WORK IN PROGRESS.
 
-[//]: # ([![GitHub Tests Action Status]&#40;https://img.shields.io/github/actions/workflow/status/delosreyesdan/http-requests-logger-for-laravel/tests.yml?branch=main&style=flat-square&#41;]&#40;https://github.com/delosreyesdan/http-requests-logger-for-laravel/actions&#41;  )
-
-[//]: # ([![License]&#40;https://img.shields.io/github/license/delosreyesdan/http-requests-logger-for-laravel.svg?style=flat-square&#41;]&#40;LICENSE.md&#41;)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v//ddelosreyes/http-requests-logger-for-laravel.svg?style=flat-square)](https://packagist.org/packages//ddelosreyes/http-requests-logger-for-laravel)  
 
 > Yet another HTTP request logger for Laravel — but built to be **fast, buffered, and flexible**.
 
