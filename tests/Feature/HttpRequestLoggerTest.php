@@ -23,7 +23,7 @@ it('adds log to redis buffer', function () {
 
     RequestLogBufferAction::add($log);
 
-    $redis = new \Redis();
+    $redis = new Redis();
 
     $config = config('http-request-logger.redis');
 

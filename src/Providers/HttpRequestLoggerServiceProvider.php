@@ -26,12 +26,12 @@ class HttpRequestLoggerServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->publishes([
-            __DIR__.'/../../config/http-request-logger.php' => config_path('http-request-logger.php'),
+            __DIR__ . '/../../config/http-request-logger.php' => config_path('http-request-logger.php'),
         ], 'config');
 
 
         $this->publishes([
-            __DIR__.'/../database/migrations/create_http_request_logs_table.php.stub'
+            __DIR__ . '../../database/migrations/create_http_request_logs_table.php.stub'
             => database_path('migrations/'.date('Y_m_d_His').'_create_http_request_logs_table.php'),
         ], 'migrations');
     }
