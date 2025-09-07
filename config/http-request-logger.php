@@ -24,7 +24,7 @@ return [
     | Database Table
     |--------------------------------------------------------------------------
     */
-    'table' => env('HTTP_REQUEST_LOGGER_TABLE', 'http_request_logs'),
+    'table' => env('HTTP_REQUEST_LOGGER_TABLE', 'r'),
 
     /*
     |--------------------------------------------------------------------------

@@ -46,6 +46,7 @@ php artisan migrate
 ```
 
 ---
+
 ## ⚙️ Configuration
 
 
@@ -81,6 +82,7 @@ REDIS_DB=0
 ````
 
 ---
+
 ## 🔍 How It Works
 1. Every incoming request is captured (method, URL, IP, user agent, headers, body)
 2. Log payload is pushed to Redis (list)
@@ -89,6 +91,7 @@ REDIS_DB=0
 
 
 ---
+
 ## 📝 Logged Data
 
 ```php
@@ -102,9 +105,8 @@ REDIS_DB=0
 ]
 ```
 
-
-
 ---
+
 ## Usage
 Option A: Middleware
 ```php
@@ -121,9 +123,8 @@ use Ddelosreyes\HttpRequestsLogger\Actions\RequestLogBufferAction;
 RequestLogBufferAction::add($request);
 ```
 
-
-
 ---
+
 ## 🧪 Testing
 This package is built with PestPHP + Orchestra Testbench.
 
