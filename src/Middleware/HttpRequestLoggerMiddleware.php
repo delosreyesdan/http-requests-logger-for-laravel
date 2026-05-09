@@ -6,7 +6,9 @@ namespace Ddelosreyes\HttpRequestsLogger\Middleware;
 
 use Closure;
 use Ddelosreyes\HttpRequestsLogger\Actions\RequestLogBufferAction;
+use Ddelosreyes\HttpRequestsLogger\Support\LogMasker;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class HttpRequestLoggerMiddleware
 {
@@ -15,36 +17,52 @@ class HttpRequestLoggerMiddleware
      */
     public function handle(Request $request, Closure $next): mixed
     {
-        if ($this->shouldSkip($request)) {
+        if (!$this->shouldLog($request)) {
             return $next($request);
         }
 
         $startedAt = microtime(true);
+        $response  = $next($request);
 
-        $response = $next($request);
+        $log = $this->buildLog($request, $response, $startedAt);
+        $log = LogMasker::mask($log);
+        $log = $this->stripExcludedFields($log);
 
-        RequestLogBufferAction::add($this->buildLog($request, $response, $startedAt));
+        RequestLogBufferAction::add($log);
 
         return $response;
     }
 
-    private function shouldSkip(Request $request): bool
+    private function shouldLog(Request $request): bool
     {
-        $paths = config('http-request-logger.exclude.paths', []);
-
-        if (empty($paths)) {
+        if (!config('http-request-logger.enabled', true)) {
             return false;
         }
 
-        // $request->is() matches against $request->path() which strips leading
-        // slashes, so normalize patterns to allow both '/health' and 'health'.
-        $normalized = array_map(fn ($p) => ltrim($p, '/'), $paths);
+        $sampleRate = (float) config('http-request-logger.sample_rate', 1.0);
+        if ($sampleRate < 1.0 && (mt_rand() / mt_getrandmax()) > $sampleRate) {
+            return false;
+        }
 
-        return $request->is(...$normalized);
+        $paths = config('http-request-logger.exclude.paths', []);
+        if (!empty($paths)) {
+            $normalized = array_map(fn($p) => ltrim($p, '/'), $paths);
+            if ($request->is(...$normalized)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private function buildLog(Request $request, mixed $response, float $startedAt): array
     {
+        $header    = config('http-request-logger.correlation_id_header', 'X-Request-ID');
+        $requestId = $request->header($header) ?? (string) Str::uuid();
+
+        // Store on request attributes so outgoing listeners in the same cycle share the same ID.
+        $request->attributes->set('_http_logger_request_id', $requestId);
+
         $log = [
             'direction'   => 'in',
             'method'      => $request->getMethod(),
@@ -55,9 +73,22 @@ class HttpRequestLoggerMiddleware
             'headers'     => json_encode($request->headers->all(), JSON_THROW_ON_ERROR),
             'body'        => json_encode($request->all(), JSON_THROW_ON_ERROR),
             'duration_ms' => (int) round((microtime(true) - $startedAt) * 1000),
+            'request_id'  => $requestId,
         ];
 
-        return $this->stripExcludedFields($log);
+        if (config('http-request-logger.log_user_id', false)) {
+            $log['user_id'] = auth()->id();
+        }
+
+        if (config('http-request-logger.log_response_body', false)) {
+            $content         = (string) $response->getContent();
+            $maxSize         = (int) config('http-request-logger.max_body_size', 10240);
+            $log['response_body'] = strlen($content) > $maxSize
+                ? substr($content, 0, $maxSize) . '...[truncated]'
+                : $content;
+        }
+
+        return $log;
     }
 
     private function stripExcludedFields(array $log): array

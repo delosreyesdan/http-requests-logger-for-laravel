@@ -42,6 +42,9 @@ abstract class TestCase extends Orchestra
             $table->json('headers')->nullable();
             $table->json('body')->nullable();
             $table->unsignedInteger('duration_ms')->nullable();
+            $table->text('response_body')->nullable();
+            $table->string('request_id', 36)->nullable()->index();
+            $table->unsignedBigInteger('user_id')->nullable()->index();
             $table->timestamps();
         });
     }

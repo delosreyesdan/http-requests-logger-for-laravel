@@ -13,11 +13,17 @@ class RedisLogRepository implements HttpRequestLogRepository
 
     public function storeBatch(array $logs): void
     {
-        $redis = $this->connection();
-        $key   = config('http-request-logger.table');
+        $redis   = $this->connection();
+        $key     = config('http-request-logger.table');
+        $maxSize = (int) config('http-request-logger.redis_store.max_entries', 10000);
 
         foreach ($logs as $log) {
             $redis->rPush($key, json_encode($log, JSON_THROW_ON_ERROR));
+        }
+
+        // Cap the list so it never grows unbounded in memory.
+        if ($maxSize > 0) {
+            $redis->lTrim($key, -$maxSize, -1);
         }
     }
 

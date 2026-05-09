@@ -14,6 +14,11 @@ class DatabaseLogRepository implements HttpRequestLogRepository
 
         $logs = array_map(fn($log) => $log + ['created_at' => $now, 'updated_at' => $now], $logs);
 
-        DB::table(config('http-request-logger.table'))->insert($logs);
+        $connection = config('http-request-logger.connection');
+        $builder = $connection
+            ? DB::connection($connection)->table(config('http-request-logger.table'))
+            : DB::table(config('http-request-logger.table'));
+
+        $builder->insert($logs);
     }
 }
