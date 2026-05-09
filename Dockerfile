@@ -22,15 +22,5 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app
 
-# Copy composer first for caching
-COPY composer.json composer.lock ./
-#
-#RUN composer install --no-scripts --no-progress --no-interaction --prefer-dist --ignore-platform-reqs
-
-RUN composer install
-
-# Copy package source
-COPY . .
-
 CMD ["composer", "test"]
 

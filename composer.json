@@ -32,8 +32,8 @@
     "pestphp/pest-plugin-laravel": "^3.2"
   },
   "suggest": {
-    "ext-redis": "Required if you want to use Redis as a buffer backend.",
-    "aws/aws-sdk-php": "Required if you want to use DynamoDB as the storage driver."
+    "ext-redis": "Required for Redis/Valkey buffering — this package uses ext-redis directly (not predis) for performance.",
+    "aws/aws-sdk-php": "Required when using the 'dynamodb' storage driver."
   },
   "config": {
     "allow-plugins": {

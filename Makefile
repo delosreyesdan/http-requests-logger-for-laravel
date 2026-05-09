@@ -1,20 +1,22 @@
-.PHONY: build up down test clean logs
+.PHONY: build test fresh up down logs clean
 
 build:
-	docker-compose build app redis
+	docker compose build
+
+test:
+	docker compose up --abort-on-container-exit --exit-code-from app
+
+fresh: build test
 
 up:
-	docker-compose up -d app redis
+	docker compose up -d
 
 down:
-	docker-compose down
-
-test: build
-	docker-compose up --abort-on-container-exit --exit-code-from app
-
-clean:
-	docker-compose down -v --remove-orphans
-	docker system prune -f
+	docker compose down
 
 logs:
-	docker-compose logs -f app
+	docker compose logs -f app
+
+clean:
+	docker compose down -v --remove-orphans
+	docker system prune -f

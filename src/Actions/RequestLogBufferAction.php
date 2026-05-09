@@ -9,14 +9,23 @@ use Redis;
 
 class RequestLogBufferAction
 {
-    protected static string $key = "http_request_logs_buffer";
+    protected static ?Redis $connection = null;
+
+    public static function key(): string
+    {
+        return config('http-request-logger.redis.prefix', 'http_request_logs') . '_buffer';
+    }
 
     public static function connection(): Redis
     {
+        if (static::$connection !== null) {
+            return static::$connection;
+        }
+
         $redis = new Redis();
 
         $redis->connect(
-            config('http-request-logger.redis.host', "127.0.0.1"),
+            config('http-request-logger.redis.host', '127.0.0.1'),
             (int) config('http-request-logger.redis.port', 6379)
         );
 
@@ -28,46 +37,72 @@ class RequestLogBufferAction
             $redis->select($db);
         }
 
-        return $redis;
+        static::$connection = $redis;
+
+        return static::$connection;
     }
 
     /**
      * @throws \JsonException
      */
-    public static function add(
-        array $log
-    ): void
+    public static function add(array $log): void
     {
-        $redis = self::connection();
+        try {
+            $redis = self::connection();
+            $key   = self::key();
 
-        $redis->rPush(
-            static::$key,
-            json_encode($log, JSON_THROW_ON_ERROR)
-        );
+            $redis->rPush($key, json_encode($log, JSON_THROW_ON_ERROR));
 
-        if ($redis->lLen(static::$key) >= config('http-request-logger.batch_size')) {
-            self::flush($redis);
+            if ($redis->lLen($key) >= config('http-request-logger.batch_size')) {
+                self::flush();
+            }
+        } catch (\RedisException $e) {
+            if (config('http-request-logger.fallback_on_buffer_error', true)) {
+                app(HttpRequestLogRepository::class)->storeBatch([$log]);
+            }
         }
     }
 
-    public static function flush($redis = null): void
+    public static function clear(): void
     {
-        $redis = $redis ?: self::connection();
-
-        $logs = [];
-
-        for ($i = 0; $i < config('http-request-logger.batch_size'); $i++) {
-            $item = $redis->lPop(static::$key);
-
-            if (empty($item)) {
-                break;
-            }
-
-            $logs[] = json_decode($item, true);
+        try {
+            self::connection()->del(self::key());
+        } catch (\RedisException $e) {
+            report($e);
         }
+    }
 
-        if (! empty($logs)) {
-            app(HttpRequestLogRepository::class)->storeBatch($logs);
+    public static function resetConnection(): void
+    {
+        static::$connection = null;
+    }
+
+    public static function flush(): void
+    {
+        try {
+            $redis     = self::connection();
+            $key       = self::key();
+            $batchSize = config('http-request-logger.batch_size');
+
+            while ($redis->lLen($key) > 0) {
+                $logs = [];
+
+                for ($i = 0; $i < $batchSize; $i++) {
+                    $item = $redis->lPop($key);
+
+                    if ($item === false || $item === null) {
+                        break;
+                    }
+
+                    $logs[] = json_decode($item, true);
+                }
+
+                if (! empty($logs)) {
+                    app(HttpRequestLogRepository::class)->storeBatch($logs);
+                }
+            }
+        } catch (\RedisException $e) {
+            report($e);
         }
     }
 }

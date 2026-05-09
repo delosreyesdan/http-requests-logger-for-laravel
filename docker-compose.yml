@@ -14,7 +14,7 @@ services:
       REDIS_PORT: 6379
       DB_CONNECTION: sqlite
       DB_DATABASE: /app/database/database.sqlite
-    command: composer test
+    command: sh -c "composer install --no-interaction --no-progress && composer test"
 
   redis:
     image: redis:7-alpine
