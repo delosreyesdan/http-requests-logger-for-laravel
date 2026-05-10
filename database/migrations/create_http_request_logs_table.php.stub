@@ -10,8 +10,10 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (!Schema::hasTable('http_request_logs')) {
-            Schema::create('http_request_logs', function (Blueprint $table) {
+        $tableName = config('http-request-logger.table', 'http_request_logs');
+
+        if (! Schema::hasTable($tableName)) {
+            Schema::create($tableName, function (Blueprint $table) {
                 $table->id();
                 $table->char('direction', 3)->default('in')->index();
                 $table->string('method', 10)->index();
@@ -27,11 +29,58 @@ return new class extends Migration
                 $table->unsignedBigInteger('user_id')->nullable()->index();
                 $table->timestamps();
             });
+
+            return;
         }
+
+        Schema::table($tableName, function (Blueprint $table) use ($tableName) {
+            if (! Schema::hasColumn($tableName, 'direction')) {
+                $table->char('direction', 3)->default('in')->index();
+            }
+            if (! Schema::hasColumn($tableName, 'method')) {
+                $table->string('method', 10)->index();
+            }
+            if (! Schema::hasColumn($tableName, 'url')) {
+                $table->text('url');
+            }
+            if (! Schema::hasColumn($tableName, 'status')) {
+                $table->unsignedSmallInteger('status')->nullable()->index();
+            }
+            if (! Schema::hasColumn($tableName, 'ip')) {
+                $table->string('ip', 45)->nullable()->index();
+            }
+            if (! Schema::hasColumn($tableName, 'user_agent')) {
+                $table->text('user_agent')->nullable();
+            }
+            if (! Schema::hasColumn($tableName, 'headers')) {
+                $table->json('headers')->nullable();
+            }
+            if (! Schema::hasColumn($tableName, 'body')) {
+                $table->json('body')->nullable();
+            }
+            if (! Schema::hasColumn($tableName, 'duration_ms')) {
+                $table->unsignedInteger('duration_ms')->nullable();
+            }
+            if (! Schema::hasColumn($tableName, 'response_body')) {
+                $table->text('response_body')->nullable();
+            }
+            if (! Schema::hasColumn($tableName, 'request_id')) {
+                $table->string('request_id', 36)->nullable()->index();
+            }
+            if (! Schema::hasColumn($tableName, 'user_id')) {
+                $table->unsignedBigInteger('user_id')->nullable()->index();
+            }
+            if (! Schema::hasColumn($tableName, 'created_at')) {
+                $table->timestamp('created_at')->nullable();
+            }
+            if (! Schema::hasColumn($tableName, 'updated_at')) {
+                $table->timestamp('updated_at')->nullable();
+            }
+        });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('http_request_logs');
+        Schema::dropIfExists(config('http-request-logger.table', 'http_request_logs'));
     }
 };
